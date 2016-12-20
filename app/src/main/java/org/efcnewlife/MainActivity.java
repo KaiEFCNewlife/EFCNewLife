@@ -7,6 +7,10 @@ import android.util.Log;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.youtube.YouTube;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -17,6 +21,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import org.efcnewlife.model.YoutubePlayList;
+import org.efcnewlife.youtubemodule.YouTubeRecyclerViewFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,6 +35,15 @@ public class MainActivity extends AppCompatActivity {
 
     private String email, password;
 
+    private static final String[] YOUTUBE_PLAYLISTS = {
+            "PL7XO5rgX0vlhUUMk41xD3o9u3cU4BDdqm",
+            "PL7XO5rgX0vlhiK3Wfwo-dbfo9Q1hxpHbz"
+    };
+
+    private YouTube mYoutubeDataApi;
+    private final GsonFactory mJsonFactory = new GsonFactory();
+    private final HttpTransport mTransport = AndroidHttp.newCompatibleTransport();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,21 +56,6 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-
-//        if (mFirebaseUser == null) {
-//            // Not logged in, launch with preset username/password
-//            mFirebaseAuth.createUserWithEmailAndPassword(email, password)
-//                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-//                        @Override
-//                        public void onComplete(@NonNull Task<AuthResult> task) {
-//                            if (task.isSuccessful()) {
-//                                Log.d(TAG, "create username/password succeed");
-//                            } else {
-//                                Log.d(TAG, "create username/password failed");
-//                            }
-//                        }
-//                    });
-//        }
 
         mFirebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -82,9 +81,19 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                     });
                         } else {
-
+                            Log.e(TAG, "Firebase authentication failed");
                         }
                     }
                 });
+
+        if (savedInstanceState == null) {
+            mYoutubeDataApi = new YouTube.Builder(mTransport, mJsonFactory, null)
+                    .setApplicationName(getResources().getString(R.string.app_name))
+                    .build();
+
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.container, YouTubeRecyclerViewFragment.newInstance(mYoutubeDataApi, YOUTUBE_PLAYLISTS))
+                    .commit();
+        }
     }
 }

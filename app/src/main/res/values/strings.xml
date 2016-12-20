@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">EFCNewLife</string>
+
+    <string name="action_recycler_view">RecyclerView</string>
 </resources>
